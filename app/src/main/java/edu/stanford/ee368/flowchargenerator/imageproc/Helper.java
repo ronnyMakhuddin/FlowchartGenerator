@@ -16,6 +16,7 @@ import edu.stanford.ee368.flowchargenerator.Graph;
 import edu.stanford.ee368.flowchargenerator.Point;
 import edu.stanford.ee368.flowchargenerator.ProgressBar;
 import edu.stanford.ee368.flowchargenerator.Rectangle;
+import edu.stanford.ee368.flowchargenerator.Rhombus;
 
 public class Helper {
 	
@@ -231,9 +232,26 @@ public class Helper {
 			FlowchartShape shape = new Rectangle(new Point(center[i][0], center[i][1]), width, height);
 			rect.add(shape);
 		}
-
 		return rect;
+	}
 
+	public static List<FlowchartShape> BuildDiamonds(int r, int[][] anchors, int[][] center) {
+
+		List<FlowchartShape> rect;
+		rect = new ArrayList<>();
+
+		int width;
+		int height;
+
+		for(int i=0; i<r; ++i) {
+
+			width = anchors[i][0];
+			height = anchors[i][1];
+
+			FlowchartShape shape = new Rhombus(new Point(center[i][0], center[i][1]), width, height);
+			rect.add(shape);
+		}
+		return rect;
 	}
 
 	public static Graph getGraph(Mat img, ProgressBar progressBar) {
@@ -245,48 +263,72 @@ public class Helper {
 
 
 		Mat[] pre = new Mat[2];
+		setProgressBarRation(progressBar, 0.2);
 		pre = PrePro.prepro(img);
 
-		setProgressBarRation(progressBar, 0.2);
+		setProgressBarRation(progressBar, 0.5);
 
 		// TEST OUTPUT FROM PREPROCESS
-		Mat mat2 = pre[0];
-		Mat mat3 = pre[1];
+		Mat matRectangle = pre[0];
+		Mat matDiamond = pre[1];
+		Mat matArrow = pre[2];
 
-		System.out.println("Row " + mat2.rows());
-		System.out.println("Col " + mat2.cols());
+		System.out.println("Row " + matRectangle.rows());
+		System.out.println("Col " + matRectangle.cols());
 
 		System.out.println("Height " + height);
 		System.out.println("Width " + width);
 
-		int row = mat2.rows();
-		int col = mat2.cols();
+		int row = matRectangle.rows();
+		int col = matRectangle.cols();
 
-		int regions_rect, regions_arrow;
+		int regions_rect, regions_diamond, regions_arrow;
+
 		Mat labels_rect = new Mat();
+		Mat labels_diamond = new Mat();
 		Mat labels_arrow = new Mat();
+
 		Mat stats_rect = new Mat();
+		Mat stats_diamond = new Mat();
 		Mat stats_arrow = new Mat();
+
 		Mat centroids_rect = new Mat();
+		Mat centroids_diamond = new Mat();
 		Mat centroids_arrow = new Mat();
-		regions_rect = Imgproc.connectedComponentsWithStats(mat2, labels_rect, stats_rect, centroids_rect);
-		setProgressBarRation(progressBar, 0.3);
-		regions_arrow = Imgproc.connectedComponentsWithStats(mat3, labels_arrow, stats_arrow, centroids_arrow);
-		setProgressBarRation(progressBar, 0.5);
+
+		regions_rect = Imgproc.connectedComponentsWithStats(matRectangle, labels_rect, stats_rect, centroids_rect);
+		setProgressBarRation(progressBar, 0.6);
+
+		regions_diamond = Imgproc.connectedComponentsWithStats(matDiamond, labels_diamond, stats_diamond, centroids_diamond);
+		setProgressBarRation(progressBar, 0.6);
+
+		regions_arrow = Imgproc.connectedComponentsWithStats(matArrow, labels_arrow, stats_arrow, centroids_arrow);
+		setProgressBarRation(progressBar, 0.7);
+
 		System.out.println("Regions: " + regions_rect);
+		System.out.println("Regions: " + regions_diamond);
 		System.out.println("Regions: " + regions_arrow);
 
-		labels_arrow.convertTo(labels_arrow, CvType.CV_32SC1);
-		int[] label_arrow = new int[row * col];
-		labels_arrow.get(0, 0, label_arrow);
 
 		labels_rect.convertTo(labels_rect, CvType.CV_32SC1);
 		int[] label_rect = new int[row * col];
 		labels_rect.get(0, 0, label_rect);
 
+		labels_diamond.convertTo(labels_diamond, CvType.CV_32SC1);
+		int[] label_diamond = new int[row * col];
+		labels_diamond.get(0, 0, label_diamond);
+
+		labels_arrow.convertTo(labels_arrow, CvType.CV_32SC1);
+		int[] label_arrow = new int[row * col];
+		labels_arrow.get(0, 0, label_arrow);
+
 		centroids_rect.convertTo(centroids_rect, CvType.CV_32SC1);
 		int[] centroid_rect = new int[row * col];
 		centroids_rect.get(0, 0, centroid_rect);
+
+		centroids_diamond.convertTo(centroids_diamond, CvType.CV_32SC1);
+		int[] centroid_diamond = new int[row * col];
+		centroids_diamond.get(0, 0, centroid_diamond);
 
 		centroids_arrow.convertTo(centroids_arrow, CvType.CV_32SC1);
 		int[] centroid_arrow = new int[row * col];
@@ -296,16 +338,22 @@ public class Helper {
 		int[] stat_rect = new int[row * col];
 		stats_rect.get(0, 0, stat_rect);
 
+		stats_diamond.convertTo(stats_diamond, CvType.CV_32SC1);
+		int[] stat_diamond = new int[row * col];
+		stats_diamond.get(0, 0, stat_diamond);
+
 		stats_arrow.convertTo(stats_arrow, CvType.CV_32SC1);
 		int[] stat_arrow = new int[row * col];
 		stats_arrow.get(0, 0, stat_arrow);
 
 
-		int r_rect= regions_rect -1;
-		int r_arrow= regions_arrow -1;
+		int r_rect= regions_rect - 1;
+		int r_diamond = regions_diamond - 1;
+		int r_arrow= regions_arrow - 1;
 
 		// find center
 		int[][] center_rect = new int[r_rect][2];
+		int[][] center_diamond = new int[r_diamond][2];
 		int[][] center_arrow = new int[r_arrow][2];
 		int index;
 		for(int i=1; i<=r_rect; ++i) {
@@ -313,13 +361,19 @@ public class Helper {
 			center_rect[i-1][0] = centroid_rect[index];
 			center_rect[i-1][1] = centroid_rect[index+1];
 		}
-		setProgressBarRation(progressBar, 0.6);
+		setProgressBarRation(progressBar, 0.7);
+		for(int i=1; i<=r_diamond; ++i) {
+			index = i*2;
+			center_diamond[i-1][0] = centroid_diamond[index];
+			center_diamond[i-1][1] = centroid_diamond[index+1];
+		}
+		setProgressBarRation(progressBar, 0.7);
 		for(int i=1; i<=r_arrow; ++i) {
 			index = i*2;
 			center_arrow[i-1][0] = centroid_arrow[index];
 			center_arrow[i-1][1] = centroid_arrow[index+1];
 		}
-		setProgressBarRation(progressBar, 0.7);
+		setProgressBarRation(progressBar, 0.8);
 
 		// ONLY PUT RECTANGLES HERE
 		int anchors_rect[][];
@@ -329,7 +383,16 @@ public class Helper {
 			anchors_rect[i][0] = stat_rect[index+2];
 			anchors_rect[i][1] = stat_rect[index+3];
 		}
-		setProgressBarRation(progressBar,0.8);
+		setProgressBarRation(progressBar,0.9);
+
+		int anchors_diamond[][];
+		anchors_diamond = new int[r_diamond][2]; // height, width
+		for(int i=0; i<r_diamond; ++i) {
+			index = 5*(i+1);
+			anchors_diamond[i][0] = stat_diamond[index+2];
+			anchors_diamond[i][1] = stat_diamond[index+3];
+		}
+		setProgressBarRation(progressBar,0.9);
 
 		// ONLY PUT ARROWS HERE
 		int tails[][];
@@ -384,13 +447,17 @@ public class Helper {
 		// Compute halfwidth and halfheight to build the Flowchartshape Rectangles
 		// They need Centroid, halfwidth and halfheight
 		List<FlowchartShape> rect = Helper.BuildRectangles(r_rect, anchors_rect, center_rect);
+		List<FlowchartShape> diamond = Helper.BuildDiamonds(r_diamond, anchors_diamond, center_diamond);
+		List<FlowchartShape> shapes = new ArrayList<>();
+		shapes.addAll(rect);
+		shapes.addAll(diamond);
 
 		// ---BUILD EDGES---
 		// Using tail and Centroid as end point
 		List<Edge> edges = Helper.BuildArrows(r_arrow, heads, tails);
 
 		// ---BUILD GRAPH---
-		Graph graph = new Graph(rect, edges);
+		Graph graph = new Graph(shapes, edges);
 		setProgressBarRation(progressBar, 1.0);
 		return graph;
 
