@@ -3,7 +3,9 @@ package edu.stanford.ee368.flowchargenerator.imageproc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -24,17 +26,55 @@ public class PrePro {
 	 * Mat[2] = arrows
 	 */
 
-	static int SMALL_REGION_REMOVAL_THRESHOLD = 100;
-	static int OPEN_SMALL_REGION_REMOVAL = 50;
-	static int ARROW_OPEN_RADIUS = 10;
-	static int HOUGH_THRESHOLD = 50;
-	static int HOUGH_MIN_LINE_LENGTH = 30;
-	static int HOUGH_MAX_LINE_GAP = 5;
-	static int CANNY_THRESHOLD_1 = 100;
-	static int CANNY_THRESHOLD_2 = 100;
-	static int CANNY_APETURE_SIZE = 3;
+	static int[] PARAMS = new int[]{100,50,10,50,30,5,100,100,3,35,40};
+	static Map<Integer, String> map = new HashMap<>();
+
+	static void initParams() {
+		map.put(0, "SMALL_REGION_REMOVAL_THRESHOLD");
+		map.put(1, "OPEN_SMALL_REGION_REMOVAL");
+		map.put(2, "ARROW_OPEN_RADIUS");
+		map.put(3, "HOUGH_THRESHOLD");
+		map.put(4, "HOUGH_MIN_LINE_LENGTH");
+		map.put(5, "HOUGH_MAX_LINE_GAP");
+		map.put(6, "CANNY_THRESHOLD_1");
+		map.put(7, "CANNY_THRESHOLD_2");
+		map.put(8, "CANNY_APETURE_SIZE");
+		map.put(9, "ADAPTIVE_THRESHOLD_BLOCKSIZE");
+		map.put(10, "ADAPTIVE_THRESHOLD_C");
+	}
+
+	public static String getParamNameByIndex(int i) {
+		return map.get(i);
+	}
+
+
 
 	public static Mat[] prepro(Mat mat){
+		initParams();
+//		int SMALL_REGION_REMOVAL_THRESHOLD = 100;
+//		int OPEN_SMALL_REGION_REMOVAL = 50;
+//		int ARROW_OPEN_RADIUS = 10;
+//		int HOUGH_THRESHOLD = 50;
+//		int HOUGH_MIN_LINE_LENGTH = 30;
+//		int HOUGH_MAX_LINE_GAP = 5;
+//		int CANNY_THRESHOLD_1 = 100;
+//		int CANNY_THRESHOLD_2 = 100;
+//		int CANNY_APETURE_SIZE = 3;
+//		int ADAPTIVE_THRESHOLD_BLOCKSIZE = 35;
+//		int ADAPTIVE_THRESHOLD_C = 40;
+
+		int SMALL_REGION_REMOVAL_THRESHOLD = PARAMS[0];
+		int OPEN_SMALL_REGION_REMOVAL = PARAMS[1];
+		int ARROW_OPEN_RADIUS = PARAMS[2];
+		int HOUGH_THRESHOLD =PARAMS[3];
+		int HOUGH_MIN_LINE_LENGTH = PARAMS[4];
+		int HOUGH_MAX_LINE_GAP = PARAMS[5];
+		int CANNY_THRESHOLD_1 = PARAMS[6];
+		int CANNY_THRESHOLD_2 = PARAMS[7];
+		int CANNY_APETURE_SIZE = PARAMS[8];
+		int ADAPTIVE_THRESHOLD_BLOCKSIZE = PARAMS[9];
+		int ADAPTIVE_THRESHOLD_C = PARAMS[10];
+
 		try {
 			System.out.println("Hello, World!");
 
@@ -49,7 +89,7 @@ public class PrePro {
 
 			// binarize, generate new mat
 			Mat bina = new Mat(rows, cols, CvType.CV_8UC1);
-			Imgproc.adaptiveThreshold(gray, bina, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 35, 40);
+			Imgproc.adaptiveThreshold(gray, bina, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, ADAPTIVE_THRESHOLD_BLOCKSIZE, ADAPTIVE_THRESHOLD_C);
 			System.out.println("Binarization Done!");
 
 			// bit inverted
@@ -268,75 +308,19 @@ public class PrePro {
 		return seOpen;
 	}
 
-	public static int getSmallRegionRemovalThreshold() {
-		return SMALL_REGION_REMOVAL_THRESHOLD;
+	public static void addParam(int i) {
+		PARAMS[i]++;
 	}
 
-	public static void setSmallRegionRemovalThreshold(int smallRegionRemovalThreshold) {
-		SMALL_REGION_REMOVAL_THRESHOLD = smallRegionRemovalThreshold;
+	public static void minusParam(int i) {
+		PARAMS[i]--;
 	}
 
-	public static int getOpenSmallRegionRemoval() {
-		return OPEN_SMALL_REGION_REMOVAL;
+	public static int getParamsSize() {
+		return PARAMS.length;
 	}
 
-	public static void setOpenSmallRegionRemoval(int openSmallRegionRemoval) {
-		OPEN_SMALL_REGION_REMOVAL = openSmallRegionRemoval;
-	}
-
-	public static int getArrowOpenRadius() {
-		return ARROW_OPEN_RADIUS;
-	}
-
-	public static void setArrowOpenRadius(int arrowOpenRadius) {
-		ARROW_OPEN_RADIUS = arrowOpenRadius;
-	}
-
-	public static int getHoughThreshold() {
-		return HOUGH_THRESHOLD;
-	}
-
-	public static void setHoughThreshold(int houghThreshold) {
-		HOUGH_THRESHOLD = houghThreshold;
-	}
-
-	public static int getHoughMinLineLength() {
-		return HOUGH_MIN_LINE_LENGTH;
-	}
-
-	public static void setHoughMinLineLength(int houghMinLineLength) {
-		HOUGH_MIN_LINE_LENGTH = houghMinLineLength;
-	}
-
-	public static int getHoughMaxLineGap() {
-		return HOUGH_MAX_LINE_GAP;
-	}
-
-	public static void setHoughMaxLineGap(int houghMaxLineGap) {
-		HOUGH_MAX_LINE_GAP = houghMaxLineGap;
-	}
-
-	public static int getCannyThreshold1() {
-		return CANNY_THRESHOLD_1;
-	}
-
-	public static void setCannyThreshold1(int cannyThreshold1) {
-		CANNY_THRESHOLD_1 = cannyThreshold1;
-	}
-
-	public static int getCannyThreshold2() {
-		return CANNY_THRESHOLD_2;
-	}
-
-	public static void setCannyThreshold2(int cannyThreshold2) {
-		CANNY_THRESHOLD_2 = cannyThreshold2;
-	}
-
-	public static int getCannyApetureSize() {
-		return CANNY_APETURE_SIZE;
-	}
-
-	public static void setCannyApetureSize(int cannyApetureSize) {
-		CANNY_APETURE_SIZE = cannyApetureSize;
+	public static int getParam(int i) {
+		return PARAMS[i];
 	}
 }

@@ -4,6 +4,8 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -28,6 +30,9 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
     boolean isProcessing;
 
     ProgressBar progressBar;
+    int CURRENT_EDIT_PARAM_INDEX;
+    TextView paramIndex;
+    TextView paramValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +43,11 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
         cameraBridgeViewBase.setCvCameraViewListener(this);
         isProcessing = false;
         progressBar = new ProgressBar(100,10,900,11);
+        CURRENT_EDIT_PARAM_INDEX = 0;
+        paramIndex = findViewById(R.id.param_index);
+        paramValue = findViewById(R.id.param_value);
+        paramIndex.setText(PrePro.getParamNameByIndex(CURRENT_EDIT_PARAM_INDEX)+ "]: ");
+        paramValue.setText("" + PrePro.getParam(CURRENT_EDIT_PARAM_INDEX));
 
         baseLoaderCallback = new BaseLoaderCallback(this) {
             @Override
@@ -67,6 +77,25 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
         }
         progressBar.draw(mat1);
         return mat1;
+    }
+
+    public void changeParam(View view) {
+        CURRENT_EDIT_PARAM_INDEX++;
+        if (CURRENT_EDIT_PARAM_INDEX == PrePro.getParamsSize()) {
+            CURRENT_EDIT_PARAM_INDEX = 0;
+        }
+        paramIndex.setText(PrePro.getParamNameByIndex(CURRENT_EDIT_PARAM_INDEX)+ "]: ");
+        paramValue.setText("" + PrePro.getParam(CURRENT_EDIT_PARAM_INDEX));
+    }
+
+    public void addParam(View view) {
+        PrePro.addParam(CURRENT_EDIT_PARAM_INDEX);
+        paramValue.setText("" + PrePro.getParam(CURRENT_EDIT_PARAM_INDEX));
+    }
+
+    public void minusParam(View view) {
+        PrePro.minusParam(CURRENT_EDIT_PARAM_INDEX);
+        paramValue.setText("" + PrePro.getParam(CURRENT_EDIT_PARAM_INDEX));
     }
 
     private class DrawAsyncTask extends AsyncTask<Mat, Void, Graph> {
